@@ -30,7 +30,7 @@ namespace PromoCodeFactory.UnitTests.WebHost.Controllers.Partners
             var partner = new Partner()
             {
                 Id = Guid.Parse("7d994823-8226-4273-b063-1a95f3cc1df8"),
-                Name = "Суперигрушки",
+                Name = "Test Partner",
                 IsActive = true,
                 PartnerLimits = new List<PartnerPromoCodeLimit>()
                 {
@@ -54,7 +54,7 @@ namespace PromoCodeFactory.UnitTests.WebHost.Controllers.Partners
             var partnerId = Guid.Parse("def47943-7aaf-44a1-ae21-05aa4948b165");
             Partner partner = null;
             
-            _partnersRepositoryMock.Setup(repo => repo.GetByIdAsync(partnerId))
+            _partnersRepositoryMock.Setup(rep => rep.GetByIdAsync(partnerId))
                 .ReturnsAsync(partner);
 
             // Act
@@ -72,7 +72,7 @@ namespace PromoCodeFactory.UnitTests.WebHost.Controllers.Partners
             var partner = CreateBasePartner();
             partner.IsActive = false;
             
-            _partnersRepositoryMock.Setup(repo => repo.GetByIdAsync(partnerId))
+            _partnersRepositoryMock.Setup(rep => rep.GetByIdAsync(partnerId))
                 .ReturnsAsync(partner);
 
             // Act

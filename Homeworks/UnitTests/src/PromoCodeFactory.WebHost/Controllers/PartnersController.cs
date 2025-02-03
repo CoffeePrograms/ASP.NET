@@ -1,11 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using PromoCodeFactory.Core.Abstractions.Repositories;
 using PromoCodeFactory.Core.Domain.PromoCodeManagement;
 using PromoCodeFactory.WebHost.Models;
+using PromoCodeFactory.WebHost.Services;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace PromoCodeFactory.WebHost.Controllers
 {
@@ -18,10 +19,14 @@ namespace PromoCodeFactory.WebHost.Controllers
         : ControllerBase
     {
         private readonly IRepository<Partner> _partnersRepository;
+        private readonly PartnerService _partnerService;
 
-        public PartnersController(IRepository<Partner> partnersRepository)
+        public PartnersController(
+            IRepository<Partner> partnersRepository,
+            PartnerService partnerService)
         {
             _partnersRepository = partnersRepository;
+            _partnerService = partnerService;
         }
 
         [HttpGet]
@@ -73,51 +78,50 @@ namespace PromoCodeFactory.WebHost.Controllers
             
             return Ok(response);
         }
+
         
         [HttpPost("{id}/limits")]
         public async Task<IActionResult> SetPartnerPromoCodeLimitAsync(Guid id, SetPartnerPromoCodeLimitRequest request)
         {
-            var partner = await _partnersRepository.GetByIdAsync(id);
-
-            if (partner == null)
-                return NotFound();
-            
-            //Если партнер заблокирован, то нужно выдать исключение
-            if (!partner.IsActive)
-                return BadRequest("Данный партнер не активен");
-            
-            //Установка лимита партнеру
-            var activeLimit = partner.PartnerLimits.FirstOrDefault(x => 
-                !x.CancelDate.HasValue);
-            
-            if (activeLimit != null)
+            try
             {
-                //Если партнеру выставляется лимит, то мы 
-                //должны обнулить количество промокодов, которые партнер выдал, если лимит закончился, 
-                //то количество не обнуляется
-                partner.NumberIssuedPromoCodes = 0;
-                
-                //При установке лимита нужно отключить предыдущий лимит
-                activeLimit.CancelDate = DateTime.Now;
+                // Получаем партнера или выбрасываем исключение, если он не найден или не активен
+                var partner = await _partnerService.GetPartnerOrThrowAsync(id);
+
+                // Отключаем предыдущий лимит, если он есть
+                await _partnerService.DeactivatePreviousLimit(partner);
+
+                // Создаем новый лимит
+                var newLimit = _partnerService.CreateNewLimit(partner, request).Result;
+
+                // Добавляем новый лимит в коллекцию партнера
+                partner.PartnerLimits.Add(newLimit);
+
+                await _partnersRepository.UpdateAsync(partner);
+
+                return CreatedAtAction(nameof(GetPartnerLimitAsync), new { id = partner.Id, limitId = newLimit.Id }, null);
             }
-
-            if (request.Limit <= 0)
-                return BadRequest("Лимит должен быть больше 0");
-            
-            var newLimit = new PartnerPromoCodeLimit()
+            catch (KeyNotFoundException ex)
             {
-                Limit = request.Limit,
-                Partner = partner,
-                PartnerId = partner.Id,
-                CreateDate = DateTime.Now,
-                EndDate = request.EndDate
-            };
-            
-            partner.PartnerLimits.Add(newLimit);
-
-            await _partnersRepository.UpdateAsync(partner);
-            
-            return CreatedAtAction(nameof(GetPartnerLimitAsync), new {id = partner.Id, limitId = newLimit.Id}, null);
+                return NotFound(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (AggregateException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка при установке лимита для партнера {ex.Message}");
+                return StatusCode(500, "Произошла внутренняя ошибка сервера");
+            }
         }
         
         [HttpPost("{id}/canceledLimits")]
@@ -133,8 +137,7 @@ namespace PromoCodeFactory.WebHost.Controllers
                 return BadRequest("Данный партнер не активен");
             
             //Отключение лимита
-            var activeLimit = partner.PartnerLimits.FirstOrDefault(x => 
-                !x.CancelDate.HasValue);
+            var activeLimit = partner.PartnerLimits.FirstOrDefault(x => !x.CancelDate.HasValue);
             
             if (activeLimit != null)
             {
