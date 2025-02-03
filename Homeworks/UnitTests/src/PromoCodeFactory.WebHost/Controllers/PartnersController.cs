@@ -89,10 +89,10 @@ namespace PromoCodeFactory.WebHost.Controllers
                 var partner = await _partnerService.GetPartnerOrThrowAsync(id);
 
                 // Отключаем предыдущий лимит, если он есть
-                await _partnerService.DeactivatePreviousLimit(partner);
+                _partnerService.DeactivatePreviousLimit(partner);
 
                 // Создаем новый лимит
-                var newLimit = _partnerService.CreateNewLimit(partner, request).Result;
+                var newLimit = _partnerService.CreateNewLimit(partner, request);
 
                 // Добавляем новый лимит в коллекцию партнера
                 partner.PartnerLimits.Add(newLimit);

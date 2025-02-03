@@ -29,7 +29,7 @@ namespace PromoCodeFactory.WebHost.Services
             return partner;
         }
 
-        public async Task DeactivatePreviousLimit(Partner partner)
+        public void DeactivatePreviousLimit(Partner partner)
         {
             //Установка лимита партнеру
             var activeLimit = partner.PartnerLimits.FirstOrDefault(x => !x.CancelDate.HasValue);
@@ -46,7 +46,7 @@ namespace PromoCodeFactory.WebHost.Services
             }
         }
 
-        public async Task<PartnerPromoCodeLimit> CreateNewLimit(
+        public PartnerPromoCodeLimit CreateNewLimit(
             Partner partner, 
             SetPartnerPromoCodeLimitRequest request)
         {
