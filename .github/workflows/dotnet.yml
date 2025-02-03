@@ -22,11 +22,11 @@ jobs:
         dotnet-version: 8.0.x  # Указываем версию .NET
     - name: Build UnitTests project
       run: |
-        cd ASP.NET/Homeworks/UnitTests/src
+        cd Homeworks/UnitTests/src
         dotnet build
     - name: Run Tests
       run: |
-        cd ASP.NET/Homeworks/UnitTests/src/Tests
+        cd Homeworks/UnitTests/src/Tests
         dotnet test
    # - name: Restore dependencies
    #   run: dotnet restore /Homeworks/UnitTests  # Восстанавливаем зависимости для решения
