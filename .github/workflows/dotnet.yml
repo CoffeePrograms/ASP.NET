@@ -12,17 +12,17 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # Используем последнюю версию Ubuntu
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v4  # Клонируем репозиторий
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: 8.0.x  # Указываем версию .NET
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore ASP.NET/Homeworks/UnitTests/src/PromoCodeFactory.sln  # Восстанавливаем зависимости для решения
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build --no-restore  # Строим приложение
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test --no-build ASP.NET/Homeworks/UnitTests/src/PromoCodeFactory.UnitTests/PromoCodeFactory.UnitTests.csproj --no-restore --verbosity normal  # Запускаем тесты
