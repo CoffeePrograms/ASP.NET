@@ -21,8 +21,8 @@ jobs:
       with:
         dotnet-version: 8.0.x  # Указываем версию .NET
     - name: Restore dependencies
-      run: dotnet restore ASP.NET/Homeworks/UnitTests/src/PromoCodeFactory.sln  # Восстанавливаем зависимости для решения
+      run: dotnet restore /Homeworks/UnitTests  # Восстанавливаем зависимости для решения
     - name: Build
       run: dotnet build --no-restore  # Строим приложение
     - name: Test
-      run: dotnet test --no-build ASP.NET/Homeworks/UnitTests/src/PromoCodeFactory.UnitTests/PromoCodeFactory.UnitTests.csproj --no-restore --verbosity normal  # Запускаем тесты
+      run: dotnet test --no-build /Homeworks/UnitTests --no-restore --verbosity normal  # Запускаем тесты
